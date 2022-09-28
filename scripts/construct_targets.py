@@ -12,9 +12,9 @@ DIROUT = join('..', 'data', 'pro', 'targets')
 
 FNTRACKS = join('..', 'data', 'raw', 'ibtracs.ALL.list.v04r00.csv')
 
-YEARS = [2010, 2020]
+YEARS = range(2000, 2022)
 
-MONTHS = range(8, 11)
+MONTHS = range(1, 13)
 
 # %%
 
@@ -29,11 +29,21 @@ def bump(lat, lon, Lat, Lon, r=5):
     f = np.exp(-d/(2*r))/2
     return f
 
+def pixel(lat, lon, Lat, Lon):
+    p = np.zeros(Lat.shape, dtype=np.uint8)
+    i = np.argmin((lat - Lat[:,0])**2)
+    j = np.argmin((lon - Lon[0,:])**2)
+    p[i,j] = 1
+    return p
+
 def construct_month_inputs(year, month, tracks):
 
     #timestamped boundaries of the month
     tstart = pd.Timestamp(f'{year}-{month}-01')
-    tend = pd.Timestamp(f'{year}-{month+1}-01')
+    if month == 12:
+        tend = pd.Timestamp(f'{year+1}-01-01')
+    else:
+        tend = pd.Timestamp(f'{year}-{month+1}-01')
     #construct a date range for 6 hourly slices through the month
     time = pd.date_range(tstart, tend, inclusive='left', freq='6H')
     #slice out the month's hurricane tracks
@@ -43,9 +53,9 @@ def construct_month_inputs(year, month, tracks):
     lon = np.linspace(0, 360, 1440, endpoint=False, dtype=np.float32)
     Lon, Lat = np.meshgrid(lon, lat)
     #stack of target arrays/images
-    target_maps = np.zeros((len(time), 721, 1440), dtype=np.float32)
+    target_maps = np.zeros((len(time), 721, 1440), dtype=np.uint8)
     #stack of binary classification flags (yes cyclones/no cyclones)
-    target_flags = np.zeros(len(time), dtype=np.bool_)
+    target_flags = np.zeros(len(time), dtype=np.uint8)
     #handle longitude convention
     tracks['lon'] = tracks['lon'].map(wrap_longitude)
     #a list of metadata
@@ -58,7 +68,7 @@ def construct_month_inputs(year, month, tracks):
             target_flags[i] = True
             for idx in sl.index:
                 lat, lon = sl[['lat','lon']].loc[idx].values
-                target_maps[i,...] += bump(lat, lon, Lat, Lon)
+                target_maps[i,...] += pixel(lat, lon, Lat, Lon)
                 meta[i].append(
                     {
                         'lat': round(lat, 4),
@@ -68,11 +78,8 @@ def construct_month_inputs(year, month, tracks):
                     }
                 )
 
-    #take a polar point off the target maps for even dimension sizes
-    target_maps = target_maps[:,:-1,:]
     #expand the dimensions by one axis for easy tensor conversion
     target_maps = np.expand_dims(target_maps, -1)
-    print(target_maps.shape)
 
     return target_maps, target_flags, meta, tracks
 
@@ -80,10 +87,10 @@ def construct_and_write(year, month, tracks):
 
     maps, flags, meta, tracks = construct_month_inputs(year, month, tracks)
 
-    p = join(DIROUT, f'{year}_{month}_target_maps.npy')
-    np.save(p, maps, allow_pickle=False)
+    p = join(DIROUT, f'{year}_{month}_target_maps')
+    np.savez_compressed(p, maps=maps, allow_pickle=False)
 
-    p = join(DIROUT, f'{year}_{month}_target_flags.npy')
+    p = join(DIROUT, f'{year}_{month}_target_flags')
     np.save(p, flags, allow_pickle=False)
 
     p = join(DIROUT, f'{year}_{month}_meta.json')
@@ -106,8 +113,8 @@ if __name__ == '__main__':
     tracks.columns = ['lat', 'lon', 'time', 'nature', 'status']
 
     #take only certain storms
-    tracks = tracks[tracks.nature == 'TS']
-    #tracks = tracks[np.isin(tracks.status, ('HU', 'HR', 'TC'))]
+    #tracks = tracks[tracks.nature == 'TS']
+    tracks = tracks[np.isin(tracks.status, ('HU', 'HR', 'TC'))]
 
     #convert datatypes
     tracks.time = tracks.time.map(pd.Timestamp)
@@ -135,6 +142,6 @@ if __name__ == '__main__':
             )
     [task.get() for task in tasks]
 
-# %%
+    pool.close()
 
 # %%

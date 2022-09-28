@@ -1,3 +1,0 @@
-need a good metric for during training
-
-reduce target peaks to <1 for sigmoid, maybe think more deeply about this, could also do tanh for [-1,1] target maps

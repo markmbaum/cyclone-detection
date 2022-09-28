@@ -1,3 +1,7 @@
+"""
+This script pulls the original ERA5 reanalysis files from the appropriate GCS bucket, slices them at 6-hourly intervals, stacks them into a single array, the sends them back to GCS. Its the first processing step for the reanalysis files.
+"""
+
 import os
 import numpy as np
 import xarray as xr

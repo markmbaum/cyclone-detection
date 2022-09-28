@@ -1,3 +1,6 @@
+"""
+This script pulls files from GCS and simply concatenates them from daily files into monthly files. It works on the results of restructure_inputs.py and is the second processing step.
+"""
 # %%
 
 import os
@@ -10,7 +13,7 @@ import multiprocessing
 def combine_inputs(year, month):
 
     #download files
-    os.system(f'gsutil -qm cp gs://cyclone-tracking-inputs/{year}_{month}_*.npy .')
+    os.system(f'gsutil -qm cp gs://cyclone-tracking/{year}_{month}_*.npy .')
     #number of days in target month
     days = pd.Period(f'{year}-{month}').days_in_month
     #load files into memory, in order
@@ -20,7 +23,7 @@ def combine_inputs(year, month):
     #write the big array to file
     np.save(f'{year}_{month}.npy', X)
     #send it back to GCS
-    os.system(f'gsutil -qm cp {year}_{month}.npy gs://cyclone-tracking-inputs/{year}_{month}.npy')
+    os.system(f'gsutil -qm cp {year}_{month}.npy gs://cyclone-tracking/{year}_{month}.npy')
     #remove the daily files and the new file
     os.system(f'rm {year}_{month}*.npy')
     
