@@ -18,16 +18,17 @@ MONTHS = range(1, 13)
 
 # %%
 
+def split_flip_stack(X):
+    north, south = np.split(X, 2, axis=1)
+    south = np.flip(south, axis=1)
+    Y = np.concatenate([north, south], axis=0)
+    return Y
+
 def wrap_longitude(lon):
     assert -180 <= lon <= 360, f"longitude {lon} out of expected bounds"
     if -180 <= lon < 0:
         return lon + 360
     return lon
-
-def bump(lat, lon, Lat, Lon, r=5):
-    d = np.sqrt((lat - Lat)**2 + (lon - Lon)**2)
-    f = np.exp(-d/(2*r))/2
-    return f
 
 def pixel(lat, lon, Lat, Lon):
     p = np.zeros(Lat.shape, dtype=np.uint8)
@@ -97,6 +98,7 @@ def construct_and_write(year, month, tracks):
     with open(p, 'w') as ofile:
         json.dump(meta, ofile, indent=True)
 
+    print(f'{year}-{month} targets finished')
     return None
 
 # %%
@@ -104,6 +106,7 @@ def construct_and_write(year, month, tracks):
 if __name__ == '__main__':
 
     tracks = pd.read_csv(FNTRACKS, skiprows=[1], low_memory=False)
+    print('tracks dataframe loaded')
 
     #provisional spurs get removed 
     tracks = tracks[tracks['TRACK_TYPE'] != 'PROVISIONAL_spur']
@@ -114,7 +117,7 @@ if __name__ == '__main__':
 
     #take only certain storms
     #tracks = tracks[tracks.nature == 'TS']
-    tracks = tracks[np.isin(tracks.status, ('HU', 'HR', 'TC'))]
+    tracks = tracks[np.isin(tracks.status, ('TY', 'ST', 'TC', 'HU', 'HR'))]
 
     #convert datatypes
     tracks.time = tracks.time.map(pd.Timestamp)
