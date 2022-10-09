@@ -18,12 +18,6 @@ MONTHS = range(1, 13)
 
 # %%
 
-def split_flip_stack(X):
-    north, south = np.split(X, 2, axis=1)
-    south = np.flip(south, axis=1)
-    Y = np.concatenate([north, south], axis=0)
-    return Y
-
 def wrap_longitude(lon):
     assert -180 <= lon <= 360, f"longitude {lon} out of expected bounds"
     if -180 <= lon < 0:
