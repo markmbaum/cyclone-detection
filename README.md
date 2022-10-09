@@ -1,4 +1,4 @@
-# Reanalysis Cyclone Tracking
+# Cyclone Tracking
 
 This project combines the historical record of real cyclones with data-assimilated global weather model output (reanalysis) to train a deep convolutional network capable of detecting cyclones in simulated climates. See the [**notebook**](test_cyclone_detector.ipynb) for more explanation and demonstration code.
 
