@@ -4,7 +4,9 @@
 
 This project combines the historical record of real cyclones with data-assimilated global weather model output (reanalysis) to train a deep convolutional network capable of detecting cyclones in simulated climates. See the [**testing notebook**](test_cyclone_detector.ipynb) for more explanation and demonstration code.
 
-Final model training hasn't happened yet because I want free GPU time.
+I would be happy to share the full dataset, which is standardized and stored convieniently in [`zarr`](https://zarr.readthedocs.io/en/stable/) format (inputs and targets) on Google Cloud Storage.
+
+Final model training hasn't happened yet because I ran out of GCP free credits doing other stuff and I'd like to avoid spending a bunch of money for time on the bigger GPUs.
 
 ### Data Sources
 
